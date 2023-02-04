@@ -5,6 +5,10 @@ STC - Smart Template Containers for C
 
 News: Version 4.1 RC2 (Feb 2023)
 ------------------------------------------------
+Introducing signed sizes and indices for containers and elements. This will add warnings in your code.
+It is recommended to use signed numbers, intptr_t for all indexing and calculations in general to avoid
+mixing with unsigned integers.
+
 Major changes:
 - Signed sizes and indices for all containers (no more mixing unsigned/signed bugs).
 - A new exciting [**cspan**](docs/cspan_api.md) single/multi-dimensional array view (with numpy-like slicing).
@@ -108,7 +112,7 @@ The usage of the containers is similar to the c++ standard containers in STL, so
 are familiar with them. All containers are generic/templated, except for **cstr** and **cbits**.
 No casting is used, so containers are type-safe like templates in c++. A basic usage example:
 ```c
-#define i_type FVec    // Container type name; if not defined, it would be cvec_float
+#define i_type FVec    // Specify container type name; defaults to: cvec_float
 #define i_val float    // Container element type
 #include <stc/cvec.h>
 
@@ -125,21 +129,19 @@ int main(void)
     FVec_drop(&vec); // cleanup memory
 }
 ```
-Below is an alternative way to write this code with STC. It uses three
-macros: `c_AUTO`, `c_FORLIST`, and `c_FOREACH`. These macro not only
-simplifies the code, but more importantly makes it less prone to errors,
-while maintaining readability:
+Below is an alternative way to write this code with STC. It use macros `c_AUTO` 
+and `c_FOREACH`. It simplifies the code, and also make it less prone to errors,
+while maintaining readability.
 ```c
 int main()
 {
     c_AUTO (FVec, vec) // RAII: define vec, init() and drop() all-in-one syntax.
     {
-        c_FORLIST (i, float, {10.f, 20.f, 30.f}) // Iterate a list of floats.
-            FVec_push(&vec, *i.ref);             // All containers have push() method.
+        vec = c_make(FVec, {10.f, 20.f, 30.f});  // Initialize with a list of floats.
 
-        c_FOREACH (i, FVec, vec)                 // Iterate elements of the container.
-            printf(" %g", *i.ref);               // i.ref is a pointer to the current element.
-    
+        c_FOREACH (i, FVec, vec)                 // Iterate elements in the container.
+            printf(" %g", *i.ref);               // i.ref is a pointer to current element.
+
     } // vec is auto cleaned up at end of scope
 }
 ```
@@ -269,7 +271,6 @@ int main(void)
     }
 }
 ```
-
 Output
 ```
 Found: 20, (20, 2), 20, 20, [20: 2]
